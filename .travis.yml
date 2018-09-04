@@ -20,8 +20,10 @@ install:
 - pip install psycopg2 --quiet
 - pip install pandas --quiet
 - pip install MySQL-python --quiet
+- pip install tableone
 
-script: nosetests --verbose --nocapture
+script:
+   - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then nosetests --verbose --nocapture; fi'
 
 env:
   global:

@@ -14,7 +14,7 @@
 \i echo-data.sql
 
 -- Durations (usually of treatments)
-\echo 'Directory 1 of 8: durations'
+\echo 'Directory 1 of 9: durations'
 \i durations/ventilation-durations.sql
 \i durations/crrt-durations.sql
 \i durations/adenosine-durations.sql
@@ -29,17 +29,19 @@
 \i durations/vasopressor-durations.sql
 \i durations/weight-durations.sql
 
-\echo 'Directory 2 of 8: comorbidity'
+\echo 'Directory 2 of 9: comorbidity'
 \i comorbidity/elixhauser-ahrq-v37-with-drg.sql
+\i comorbidity/elixhauser-ahrq-v37-no-drg.sql
+\i comorbidity/elixhauser-ahrq-v37-no-drg-all-icd.sql
 \i comorbidity/elixhauser-quan.sql
 \i comorbidity/elixhauser-score-ahrq.sql
 \i comorbidity/elixhauser-score-quan.sql
 
-\echo 'Directory 3 of 8: demographics'
+\echo 'Directory 3 of 9: demographics'
 \i demographics/HeightWeightQuery.sql
-\i demographics/icustay_detail.sql
+\i demographics/icustay-detail.sql
 
-\echo 'Directory 4 of 8: firstday'
+\echo 'Directory 4 of 9: firstday'
 -- data which is extracted from a patient's first ICU stay
 \i firstday/blood-gas-first-day.sql
 \i firstday/blood-gas-first-day-arterial.sql
@@ -53,7 +55,7 @@
 \i firstday/weight-first-day.sql
 
 \echo 'Directory 5 of 9: fluid-balance'
-\i fluid-balance/urineoutput.sql
+\i fluid-balance/urine-output.sql
 
 \echo 'Directory 6 of 9: sepsis'
 \i sepsis/angus.sql
@@ -70,7 +72,8 @@
 \echo 'Directory 8 of 9: organfailure'
 \i organfailure/kdigo-creatinine.sql
 \i organfailure/kdigo-uo.sql
-\i organfailure/kdigo-admission.sql
+\i organfailure/kdigo-stages-7day.sql
+\i organfailure/kdigo-stages-48hr.sql
 \i organfailure/meld.sql
 
 -- Severity of illness scores (requires many views from above)

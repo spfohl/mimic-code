@@ -29,6 +29,10 @@ endif
 # add ON_ERROR_STOP so scripts stop when they fail
 DBSTRING +=  options=--search_path=$(DBSCHEMA)
 
+# if psql version is 10, then we can use declarative partitioning
+# this is done in the postgres_create_tables_pg10.sql file
+PSQL_MAJOR_VERSION := $$(psql --version | perl -lne 'print "_pg10" if / 10.\d+/')
+
 help:
 	@echo '                                                                            '
 	@echo '----------------------------------------------------------------------------'
@@ -50,17 +54,17 @@ help:
 	@echo '----------------------------------------------------------------------------'
 	@echo '                                                                            '
 
-mimic-gz: mimic-check-gz create-user mimic-build-gz
+mimic-gz: mimic-check-gz mimic-build-gz
 
-mimic: mimic-check create-user mimic-build
+mimic: mimic-check mimic-build
 
 create-user:
-	@echo '------------------------'
-	@echo '-- Building MIMIC-III --'
-	@echo '------------------------'
+	@echo '-------------------------------------'
+	@echo '-- Creating user, database, schema --'
+	@echo '-------------------------------------'
 	@echo ''
 	@sleep 2
-	MIMICUSER="$(DBUSER)" MIMIC_DB="$(DBNAME)" MIMIC_PASSWORD="$(DBPASS)" MIMIC_SCHEMA="$(DBSCHEMA)" ./create_mimic_user.sh
+	MIMIC_USER="$(DBUSER)" MIMIC_DB="$(DBNAME)" MIMIC_PASSWORD="$(DBPASS)" MIMIC_SCHEMA="$(DBSCHEMA)" DBHOST="$(DBHOST)" DBPORT="$(DBPORT)" ./create_mimic_user.sh
 
 mimic-build-gz:
 	@echo '------------------------'
@@ -72,7 +76,7 @@ mimic-build-gz:
 	@echo '---------------------'
 	@echo ''
 	@sleep 2
-	psql "$(DBSTRING)" -v ON_ERROR_STOP=1 -f postgres_create_tables.sql
+	psql "$(DBSTRING)" -v ON_ERROR_STOP=1 -f postgres_create_tables$(PSQL_MAJOR_VERSION).sql
 	@echo ''
 	@echo '------------------'
 	@echo '-- Loading data --'
@@ -112,7 +116,7 @@ mimic-build:
 	@echo '---------------------'
 	@echo ''
 	@sleep 2
-	psql "$(DBSTRING)" -v ON_ERROR_STOP=1 -f postgres_create_tables.sql
+	psql "$(DBSTRING)" -v ON_ERROR_STOP=1 -f postgres_create_tables$(PSQL_MAJOR_VERSION).sql
 	@echo ''
 	@echo '------------------'
 	@echo '-- Loading data --'
@@ -147,14 +151,20 @@ mimic-download:
 	@echo '-- Downloading MIMIC-III from PhysioNet --'
 	@echo '------------------------------------------'
 	@echo ''
-	wget --user ${physionetuser} --ask-password -P ${datadir} -A csv.gz -m -p -E -k -K -np -nd  "$(PHYSIONETURL)"
+ifeq ("$(physionetuser)","")
+	@echo 'Cannot download data: physionetuser variable is unset.'
+	@echo 'Call the makefile again with physionetuser=<USERNAME>'
+	@echo ' e.g. make eicu-download datadir=/path/to/data physionetuser=hello@physionet.org'
+else
+	wget --user $(physionetuser) --ask-password -P $(datadir) -A csv.gz -m -p -E -k -K -np -nd "$(PHYSIONETURL)"
+endif
 
 mimic-demo-download:
 	@echo '------------------------------------------'
 	@echo '-- Downloading MIMIC-III from PhysioNet --'
 	@echo '------------------------------------------'
 	@echo ''
-	wget --user ${physionetuser} --ask-password -P ${datadir} -A csv.gz -m -p -E -k -K -np -nd  "$(PHYSIONETDEMOURL)"
+	wget --user $(physionetuser) --ask-password -P $(datadir) -A csv.gz -m -p -E -k -K -np -nd "$(PHYSIONETDEMOURL)"
 
 #This is fairly inelegant and could be tidied with a for loop and an if to check for gzip,
 #but need to maintain compatibility with Windows, which baffling lacks these things
@@ -336,5 +346,18 @@ endif
 
 clean:
 	@echo
+
+concepts:
+	@echo '------------------------'
+	@echo '-- Building MIMIC-III --'
+	@echo '------------------------'
+	@echo ''
+	@echo '---------------------'
+	@echo '-- Adding concepts --'
+	@echo '---------------------'
+	@echo ''
+	@sleep 2
+	cd ../../concepts/ && psql "$(DBSTRING)" -v ON_ERROR_STOP=1 -f make-concepts.sql
+
 
 .PHONY: help mimic clean

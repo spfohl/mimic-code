@@ -1,15 +1,17 @@
 
 ## Introduction to the build system
 
-The build system for mimic code uses the GNU Makefile system. From a user's point of view this makes the whole process very straightforward.
-Starting from a fresh system which has both GNU Make installed, PostgreSQL installed, and a local copy of this repository, an instance of the MIMIC database can be imported from PhysioNet by running the following:
+The build system for mimic code uses the GNU Makefile system. From a user's point of view this makes the whole process very straightforward. Note that the make system is only available for a PostgreSQL database build.
 
-```
-make mimic-download
-make mimic-gz DATADIR=/path/to/data
+Starting from a fresh system which has GNU Make installed, PostgreSQL installed, and a local copy of this repository, an instance of the MIMIC database can be imported from PhysioNet by running the following from the `buildmimic/postgres` subdirectory:
+
+```sh
+export datadir="/path/to/data"
+make mimic-download physionetuser=<PHYSIONETWORKS_USERNAME> datadir=$datadir
+make mimic-gz datadir=$datadir
 ```
 
-Note that if you have already downloaded the data, you can skip the `make mimic-download`. If you have already decompressed the data into `.csv` files, then you can run `make mimic DATADIR=/path/to/data`.
+Note that if you have already downloaded the data, you can skip the `make mimic-download`, just be sure to set `datadir` appropriately. If you have already decompressed the data into `.csv` files, call `make mimic` instead of `make mimic-gz`, e.g. `make mimic datadir=/path/to/data`.
 
 Optionally, additional contributed materialized views can be created afterward by running:
 
@@ -28,6 +30,8 @@ localhost:5432:*:mimic:password
 
 Replace ```mimic``` with your username and ```password``` with your password. Note that this is storage of your database password in the clear and so we would recommend only doing this for installation.
 
+Alternatively you can configure the database to use operating system level authentication. See the Postgres manual for more detail (in particular, the section(s) on "Peer Authentication"): https://www.postgresql.org/docs/9.6/static/auth-methods.html
+
 ### Non-standard username or database name
 If you need to use a username or database name other than ```mimic```, then you will need to specify this by modifying the top-level Makefile:
 
@@ -37,4 +41,4 @@ DBUSER=mimic
 ```
 
 ## Contributing
-If you would like to contribute code to create a materialized view to the `concepts` folder, the existence of this makefile places an additional (and hopefully very minor) burden to ensure that your views are included in this build system. The top-level Makefile (i.e. the one in the root of this repository) is a wrapper that calls `concepts/make-concepts.sql`: simply add a command which calls the script to this file. The format is fairly straightforward: e.g. adding the `\i sepsis/angus.sql` line informs the script to call the `concepts/sepsis/angus.sql` file.
+If you would like to contribute code to create a materialized view to the `concepts` folder, simply add a command which calls the script to the `concepts/make-concepts.sql` file. The format is fairly straightforward: e.g. adding the `\i sepsis/angus.sql` line informs the script to call the `concepts/sepsis/angus.sql` file.
